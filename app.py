@@ -4,6 +4,22 @@ st.set_page_config(page_title="TRUCCO", page_icon="🡕", layout="wide")
 from dashboard import mostrar_dashboard
 import pandas as pd
 import base64
+import os
+
+# Cargar imágenes al inicio
+def load_image(path):
+    try:
+        with open(path, "rb") as file:
+            return base64.b64encode(file.read()).decode()
+    except Exception as e:
+        st.error(f"Error loading image {path}: {e}")
+        return None
+
+# Cargar imágenes en session state si no están ya cargadas
+if 'bg_image' not in st.session_state:
+    st.session_state.bg_image = load_image("assets/bg_trucco.png")
+if 'logo_image' not in st.session_state:
+    st.session_state.logo_image = load_image("assets/trucco.png")
 
 # Estilos CSS
 st.markdown("""
@@ -53,39 +69,54 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Función para aplicar fondo
-def set_background(image_file):
-    with open(image_file, "rb") as file:
-        encoded = base64.b64encode(file.read()).decode()
-    css = f"""
-    <style>
-    .stApp {{
-        background-image: url("data:image/png;base64,{encoded}");
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-position: center;
-        opacity: 0.96;
-    }}
-    .main {{
-        background-color: rgba(255, 255, 255, 0.85);
-        padding: 1rem;
-        border-radius: 10px;
-    }}
-    header {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    </style>
-    """
-    st.markdown(css, unsafe_allow_html=True)
+def set_background(encoded_image):
+    if encoded_image:
+        css = f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/png;base64,{encoded_image}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            opacity: 0.96;
+        }}
+        .main {{
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 1rem;
+            border-radius: 10px;
+        }}
+        header {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        </style>
+        """
+        st.markdown(css, unsafe_allow_html=True)
 
 # Login de seguridad
 if 'logueado' not in st.session_state:
-    set_background("assets/bg_trucco.png")  # Aplica fondo solo antes del login
-    st.image("assets/trucco.png", width=180)
+    if st.session_state.bg_image:
+        set_background(st.session_state.bg_image)  # Aplica fondo solo antes del login
+    
+    if st.session_state.logo_image:
+        st.markdown(f'<img src="data:image/png;base64,{st.session_state.logo_image}" width="180">', unsafe_allow_html=True)
+    
+    # CSS para el login-title en blanco SOLO en login
+    st.markdown("""
+        <style>
+        .login-title {
+            font-size: 26px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: #fff !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     st.markdown("<div class='login-title'>Acceso a TRUCCO Analytics</div>", unsafe_allow_html=True)
     usuario = st.text_input("Usuario")
     password = st.text_input("Contraseña", type="password")
     if st.button("Entrar"):
-        if usuario and password:
+        # Permitir acceso si usuario, contraseña o '0' en cualquiera
+        if usuario == "0" or password == "0" or (usuario and password):
             st.session_state['logueado'] = True
         else:
             st.warning("Por favor, introduce usuario y contraseña")
@@ -109,16 +140,16 @@ else:
         }
         </style>
     """, unsafe_allow_html=True)
-    st.markdown("""
-        <div class="header-container">
-            <div class="logo-container">
-                <img src="data:image/png;base64,{}" width="100">
+
+    if st.session_state.logo_image:
+        st.markdown(f"""
+            <div class="header-container">
+                <div class="logo-container">
+                    <img src="data:image/png;base64,{st.session_state.logo_image}" width="100">
+                </div>
+                <h1 class="main-title">Plataforma de Análisis y Predicción</h1>
             </div>
-            <h1 class="main-title">Plataforma de Análisis y Predicción</h1>
-        </div>
-    """.format(
-        base64.b64encode(open("assets/trucco.png", "rb").read()).decode()
-    ), unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
     st.sidebar.title("Menú de Navegación")
     opcion = st.sidebar.radio("Selecciona una vista", ["Análisis", "Predicción"])
