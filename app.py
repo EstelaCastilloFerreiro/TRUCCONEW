@@ -79,28 +79,8 @@ def set_background(image_file):
 
 # Login de seguridad
 if 'logueado' not in st.session_state:
-    set_background("assets-20250619T075314Z-1-001/assets/bg_trucco.png")  # Aplica fondo solo antes del login
-    st.markdown("""
-        <style>
-        body, .stApp, .main, .sidebar, .css-1d391kg, .css-1v0mbdj, .css-1cpxqw2, .css-ffhzg2, .css-1offfwp, .css-1v3fvcr, .css-1lcbmhc, .css-1y4p8pa, .css-1n76uvr, .css-1b0udgb, .css-1q8dd3e, .css-1d391kg *, .stTextInput > div > input, .stTextInput > label, .stSelectbox > div, .stSelectbox > label, .stRadio > div, .stRadio > label, .stButton > button, .stFileUploader > div, .stFileUploader > label, .stAlert, .stAlert > div, .stAlert > span, .stSidebar, .stSidebar * {
-            color: #fff !important;
-        }
-        .login-title {
-            color: #fff !important;
-        }
-        .stButton > button {
-            background-color: #fff !important;
-            color: #222 !important;
-            font-weight: bold;
-            border: 2px solid #fff !important;
-            border-radius: 8px !important;
-        }
-        .stTextInput > div > input {
-            color: #fff !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    st.image("assets-20250619T075314Z-1-001/assets/Trucco.png", width=180)
+    set_background("assets/bg_trucco.png")  # Aplica fondo solo antes del login
+    st.image("assets/trucco.png", width=180)
     st.markdown("<div class='login-title'>Acceso a TRUCCO Analytics</div>", unsafe_allow_html=True)
     usuario = st.text_input("Usuario")
     password = st.text_input("Contraseña", type="password")
@@ -137,7 +117,7 @@ else:
             <h1 class="main-title">Plataforma de Análisis y Predicción</h1>
         </div>
     """.format(
-        base64.b64encode(open("assets-20250619T075314Z-1-001/assets/Trucco.png", "rb").read()).decode()
+        base64.b64encode(open("assets/trucco.png", "rb").read()).decode()
     ), unsafe_allow_html=True)
 
     st.sidebar.title("Menú de Navegación")
