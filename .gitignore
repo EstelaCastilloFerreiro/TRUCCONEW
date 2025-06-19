@@ -1,0 +1,18 @@
+# Archivos de Python/Streamlit que no queremos subir
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite3
+*.log
+
+# Entornos virtuales
+.env
+.venv
+venv/
+ENV/
+env/
+
+# Archivos ocultos de editores
+.DS_Store
+.vscode/
+.idea/
