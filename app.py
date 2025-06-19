@@ -109,6 +109,10 @@ if 'logueado' not in st.session_state:
             margin-bottom: 1rem;
             color: #fff !important;
         }
+        /* Hace las etiquetas de los inputs blancas solo en login */
+        label, .stTextInput > label, .stTextInput label, .stTextInput div label {
+            color: #fff !important;
+        }
         </style>
     """, unsafe_allow_html=True)
     st.markdown("<div class='login-title'>Acceso a TRUCCO Analytics</div>", unsafe_allow_html=True)
