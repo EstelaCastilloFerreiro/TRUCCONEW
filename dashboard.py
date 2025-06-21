@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import seaborn as sns
 import re  # Add re import for regex
+import os
 
 # Configuración estilo gráfico general (sin líneas de fondo)
 sns.set_style("white")
@@ -42,6 +43,29 @@ TIENDAS_EXTRANJERAS = [
 COL_ONLINE = '#2ca02c'   # verde fuerte
 COL_OTRAS = '#ff7f0e'    # naranja
 
+def custom_sort_key(talla):
+    """
+    Clave de ordenación personalizada para tallas.
+    Prioriza: 1. Tallas numéricas, 2. Tallas de letra estándar, 3. Tallas únicas, 4. Resto.
+    """
+    talla_str = str(talla).upper()
+    
+    # Prioridad 1: Tallas numéricas (e.g., '36', '38')
+    if talla_str.isdigit():
+        return (0, int(talla_str))
+    
+    # Prioridad 2: Tallas de letra estándar
+    size_order = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+    if talla_str in size_order:
+        return (1, size_order.index(talla_str))
+        
+    # Prioridad 3: Tallas únicas
+    if talla_str in ['U', 'ÚNICA', 'UNICA', 'TU']:
+        return (2, talla_str)
+        
+    # Prioridad 4: Resto, ordenado alfabéticamente
+    return (3, talla_str)
+
 def setup_streamlit_styles():
     """Configurar estilos de Streamlit"""
     st.markdown("""
@@ -79,7 +103,7 @@ def setup_streamlit_styles():
         width: 100%;
     }
     .kpi-group-title {
-        color: #000000;
+        color: #666666;
         font-size: 16px;
         font-weight: 600;
         margin-bottom: 10px;
@@ -97,19 +121,19 @@ def setup_streamlit_styles():
         min-width: 150px;
     }
     .small-font {
-        color: #000000;
+        color: #666666;
         font-size: 14px;
         margin-bottom: 5px;
         margin-top: 0;
     }
     .metric-value {
-        color: #000000;
+        color: #111827;
         font-size: 24px;
         font-weight: bold;
         margin: 0;
     }
     .section-title {
-        color: #000000;
+        color: #111827;
         font-size: 22px;
         font-weight: 700;
         margin-bottom: 20px;
@@ -117,7 +141,7 @@ def setup_streamlit_styles():
         line-height: 1.2;
     }
     .viz-title {
-        color: #000000;
+        color: #111827;
         font-size: 20px;
         font-weight: 700;
         margin-bottom: 15px;
@@ -153,10 +177,10 @@ def viz_title(text):
     st.markdown(f'<h3 class="viz-title">{text}</h3>', unsafe_allow_html=True)
 
 def titulo(text):
-    st.markdown(f"<h4 style='text-align:left;color:#000000;margin:0;padding:0;font-size:20px;font-weight:bold;'>{text}</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4 style='text-align:left;color:#666666;margin:0;padding:0;font-size:20px;font-weight:bold;'>{text}</h4>", unsafe_allow_html=True)
 
 def subtitulo(text):
-    st.markdown(f"<h5 style='text-align:left;color:#000000;margin:0;padding:0;font-size:22px;font-weight:bold;'>{text}</h5>", unsafe_allow_html=True)
+    st.markdown(f"<h5 style='text-align:left;color:#666666;margin:0;padding:0;font-size:22px;font-weight:bold;'>{text}</h5>", unsafe_allow_html=True)
 
 def aplicar_filtros(df):
     if not pd.api.types.is_datetime64_any_dtype(df['Fecha Documento']):
@@ -179,7 +203,7 @@ def aplicar_filtros(df):
                      (df['Fecha Documento'] <= pd.to_datetime(fecha_fin))]
 
     tiendas = sorted(df_filtrado['NombreTPV'].dropna().unique())
-    
+
     modo_tienda = st.sidebar.selectbox(
         "Modo selección tiendas",
         ["Todas las tiendas", "Seleccionar tiendas específicas"]
@@ -236,7 +260,7 @@ def plot_bar(df, x, y, title, palette='Greens', rotate_x=30, color=None):
         
         sns.barplot(x=x, y=y, data=df, palette=colors, ax=ax)
     
-    ax.set_title(title, fontsize=16, fontweight='bold', color="#000000", loc="left", pad=0)
+    ax.set_title(title, fontsize=16, fontweight='bold', color="#111827", loc="left", pad=0)
     ax.set_xlabel(x, fontsize=13)
     ax.set_ylabel(y, fontsize=13)
     plt.xticks(rotation=rotate_x, ha='right', fontsize=11)
@@ -255,7 +279,7 @@ def plot_bar(df, x, y, title, palette='Greens', rotate_x=30, color=None):
             ha='center',
             va='bottom',
             fontsize=10,
-            color='#000000'
+            color='#333'
         )
     
     plt.tight_layout(pad=0.5)
@@ -368,9 +392,9 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             """.format(tiendas_fisicas, ventas_fisicas_dinero, tiendas_online, ventas_online_dinero), unsafe_allow_html=True)
 
             # Par 1: Ventas Mensuales y Top 10 Tiendas con Menos Ventas
-            col1, col2 = st.columns(2)
-            
-            with col1:
+        col1, col2 = st.columns(2)
+
+        with col1:
                 viz_title("Ventas Mensuales por Tipo de Tienda")
                 ventas_mes_tipo = df_ventas.groupby(['Mes', 'Es_Online']).agg({
                     'Cantidad': 'sum',
@@ -395,8 +419,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=0, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 
                 fig.update_traces(
@@ -409,8 +432,9 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 
                 st.plotly_chart(fig, use_container_width=True)
 
-            with col2:
-                viz_title("Top Tiendas con Menos Ventas")
+        with col2:
+                # Top tiendas con menos ventas por unidades
+                viz_title("Top tiendas con menos ventas")
                 ventas_por_tienda = df_ventas.groupby('NombreTPV').agg({
                     'Cantidad': 'sum',
                     'Ventas Dinero': 'sum'
@@ -422,7 +446,6 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     bottom_10_tiendas,
                     x='Tienda',
                     y='Unidades Vendidas',
-                    text='Ventas (€)',
                     color='Unidades Vendidas',
                     color_continuous_scale=COLOR_GRADIENT,
                     height=400
@@ -432,30 +455,73 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     showlegend=False,
                     margin=dict(t=0, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(
-                    texttemplate='%{text:.0f}€', 
+                    texttemplate='%{y:,.0f} uds',
                     textposition='outside',
+                    hovertemplate="Tienda: %{x}<br>Unidades: %{y:,}<br>Ventas: %{customdata:,.2f}€<extra></extra>",
+                    customdata=bottom_10_tiendas['Ventas (€)'],
                     opacity=0.8
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-            # Par 2: Unidades por Talla y Ventas por Familia
+            # Nueva fila: Top tiendas con más ventas por ventas (€)
             col3, col4 = st.columns(2)
-            
             with col3:
+                viz_title("Top tiendas con más ventas")
+                top_10_tiendas = ventas_por_tienda.nlargest(10, 'Ventas (€)')
+                fig = px.bar(
+                    top_10_tiendas,
+                    x='Tienda',
+                    y='Ventas (€)',
+                    color='Ventas (€)',
+                    color_continuous_scale=COLOR_GRADIENT,
+                    height=400,
+                    labels={'Tienda': 'Tienda', 'Ventas (€)': 'Ventas (€)', 'Unidades Vendidas': 'Unidades'}
+                )
+                fig.update_layout(
+                    xaxis_tickangle=45,
+                    showlegend=False,
+                    margin=dict(t=0, b=0, l=0, r=0),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)"
+                )
+                fig.update_traces(
+                    texttemplate='%{y:,.2f}€',
+                    textposition='outside',
+                    hovertemplate="Tienda: %{x}<br>Ventas: %{y:,.2f}€<br>Unidades: %{customdata:,}<extra></extra>",
+                    customdata=top_10_tiendas['Unidades Vendidas'],
+                    opacity=0.8
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            with col4:
+                st.empty()
+
+            # Par 2: Unidades por Talla y Ventas por Familia
+            col5, col6 = st.columns(2)
+            
+            with col5:
                 viz_title("Unidades Vendidas por Talla")
-                familias = sorted(df_ventas['Familia'].unique())
+        familias = sorted(df_ventas['Familia'].unique())
                 familia_seleccionada = st.selectbox("Selecciona una familia:", familias)
                 
                 df_familia = df_ventas[df_ventas['Familia'] == familia_seleccionada]
-                tallas_familia = df_familia.groupby('Talla')['Cantidad'].sum().reset_index()
-                tallas_orden = sorted(tallas_familia['Talla'].unique())
                 
+                # 1. Obtener todas las tallas únicas para la familia seleccionada
+                tallas_presentes = df_familia['Talla'].dropna().unique()
+                
+                # 2. Ordenarlas con la lógica personalizada
+                tallas_orden = sorted(tallas_presentes, key=custom_sort_key)
+                
+                # 3. Agrupar y sumar las cantidades
+                tallas_sumadas = df_familia.groupby('Talla')['Cantidad'].sum()
+                
+                # 4. Reindexar para asegurar el orden y la inclusión de todas las tallas (incluso con suma 0)
+                tallas_grafico = tallas_sumadas.reindex(tallas_orden, fill_value=0).reset_index()
+
                 fig = px.bar(
-                    tallas_familia,
+                    tallas_grafico,
                     x='Talla',
                     y='Cantidad',
                     text='Cantidad',
@@ -471,8 +537,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis={'categoryorder': 'array', 'categoryarray': tallas_orden},
                     margin=dict(t=0, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 
                 fig.update_traces(
@@ -482,39 +547,153 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-            with col4:
+            with col6:
+                # Ventas por Familia: tooltip mejorado
                 viz_title("Ventas por Familia")
                 ventas_familia = df_ventas.groupby('Familia').agg({
                     'Cantidad': 'sum',
                     'Ventas Dinero': 'sum'
                 }).reset_index()
-                ventas_familia.columns = ['Familia', 'Unidades Vendidas', 'Ventas (€)']
-                ventas_familia = ventas_familia.sort_values('Ventas (€)', ascending=True)
+                ventas_familia = ventas_familia.sort_values('Ventas Dinero', ascending=True)
 
                 fig = px.bar(
                     ventas_familia,
-                    x='Ventas (€)',
+                    x='Ventas Dinero',
                     y='Familia',
                     orientation='h',
-                    text='Ventas (€)',
-                    color='Ventas (€)',
+                    color='Ventas Dinero',
                     color_continuous_scale=COLOR_GRADIENT,
-                    height=400
+                    height=400,
+                    labels={'Ventas Dinero': 'Ventas (€)', 'Cantidad': 'Unidades'}
+                )
+                fig.update_traces(
+                    hovertemplate="Familia: %{y}<br>Ventas: %{x:,.2f}€<br>Unidades: %{customdata:,}<extra></extra>",
+                    customdata=ventas_familia['Cantidad'],
+                    opacity=0.8
                 )
                 fig.update_layout(
                     showlegend=False,
                     yaxis={'categoryorder': 'total ascending'},
                     margin=dict(t=0, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
-                )
-                fig.update_traces(
-                    texttemplate='%{text:.0f}€', 
-                    textposition='outside',
-                    opacity=0.8
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 st.plotly_chart(fig, use_container_width=True)
+
+            # --- REVISED: Top/Bottom 10 Complete Descriptions by Family ---
+            st.markdown("---")
+            viz_title("Análisis de Descripciones por Familia")
+
+            desc_path = os.path.join('data', 'datos_descripciones.xlsx')
+            if os.path.exists(desc_path):
+                try:
+                    df_desc = pd.read_excel(desc_path, engine='openpyxl')
+                    
+                    desc_cols = ['MANGA', 'CUELLO', 'TEJIDO', 'DETALLE', 'ESTILO', 'CORTE']
+                    
+                    if all(col in df_desc.columns for col in desc_cols):
+                        # --- FILTROS ---
+                        col_filter1, col_filter2 = st.columns(2)
+                        
+                        with col_filter1:
+                             # Unimos con ventas primero para solo mostrar familias relevantes
+                            ventas_desc = df_ventas.copy()
+                            ventas_desc['ACT_clean'] = ventas_desc['ACT'].astype(str).str[:-1]
+                            ventas_con_desc_pre = ventas_desc.merge(
+                                df_desc[['ACT'] + desc_cols],
+                                left_on='ACT_clean',
+                                right_on='ACT',
+                                how='inner'
+                            )
+                            familias_disponibles = sorted(ventas_con_desc_pre['Familia'].dropna().unique())
+                            familia_seleccionada = st.selectbox(
+                                "Selecciona una Familia:", 
+                                familias_disponibles, 
+                                key="familia_desc_selector"
+                            )
+
+                        with col_filter2:
+                            opciones_desc = ["Descripción Completa"] + desc_cols
+                            tipo_descripcion = st.selectbox(
+                                "Selecciona Tipo de Descripción:", 
+                                opciones_desc, 
+                                key="tipo_desc_selector"
+                            )
+
+                        # --- LÓGICA DE DATOS ---
+                        if tipo_descripcion == "Descripción Completa":
+                            df_desc['Descripción Analizada'] = df_desc[desc_cols].fillna('').apply(
+                                lambda row: ' - '.join(row.values.astype(str)).strip(), axis=1
+                            )
+                        else:
+                            df_desc['Descripción Analizada'] = df_desc[tipo_descripcion].fillna('N/A')
+                        
+                        df_desc_clean = df_desc[['ACT', 'Descripción Analizada']].copy().dropna()
+                        
+                        ventas_con_desc = ventas_desc.merge(
+                            df_desc_clean,
+                            left_on='ACT_clean',
+                            right_on='ACT',
+                            how='inner'
+                        )
+                        
+                        df_familia_desc = ventas_con_desc[ventas_con_desc['Familia'] == familia_seleccionada]
+                        
+                        desc_group = df_familia_desc.groupby('Descripción Analizada').agg({
+                            'Ventas Dinero': 'sum',
+                            'Cantidad': 'sum'
+                        }).reset_index()
+                        
+                        # Excluir descripciones vacías o sin valor real
+                        if tipo_descripcion == "Descripción Completa":
+                            desc_group = desc_group[desc_group['Descripción Analizada'].str.replace(' - ', '').str.strip() != '']
+                        else:
+                            desc_group = desc_group[desc_group['Descripción Analizada'] != 'N/A']
+
+                        if not desc_group.empty:
+                            desc_group = desc_group.sort_values('Ventas Dinero', ascending=False)
+                            top10 = desc_group.head(10)
+                            bottom10 = desc_group.tail(10)
+
+                            colA, colB = st.columns(2)
+                            with colA:
+                                viz_title(f'Top 10 en {tipo_descripcion}')
+                                fig = px.bar(
+                                    top10, 
+                                    x='Ventas Dinero', 
+                                    y='Descripción Analizada', 
+                                    orientation='h', 
+                                    color='Ventas Dinero', 
+                                    color_continuous_scale=COLOR_GRADIENT,
+                                    text='Cantidad'
+                                )
+                                fig.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending', 'title': ''}, margin=dict(t=30, b=0, l=0, r=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                                fig.update_traces(texttemplate='%{text:,.0f} uds', textposition='outside', hovertemplate="Descripción: %{y}<br>Ventas: %{x:,.2f}€<br>Unidades: %{text:,.0f}<extra></extra>", opacity=0.8)
+                                st.plotly_chart(fig, use_container_width=True)
+                        
+                            with colB:
+                                viz_title(f'Bottom 10 en {tipo_descripcion}')
+                                fig = px.bar(
+                                    bottom10, 
+                                    x='Ventas Dinero', 
+                                    y='Descripción Analizada', 
+                                    orientation='h', 
+                                    color='Ventas Dinero', 
+                                    color_continuous_scale=COLOR_GRADIENT,
+                                    text='Cantidad'
+                                )
+                                fig.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending', 'title': ''}, margin=dict(t=30, b=0, l=0, r=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                                fig.update_traces(texttemplate='%{text:,.0f} uds', textposition='outside', hovertemplate="Descripción: %{y}<br>Ventas: %{x:,.2f}€<br>Unidades: %{text:,.0f}<extra></extra>", opacity=0.8)
+                                st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            st.info(f"No hay datos de '{tipo_descripcion}' para la familia '{familia_seleccionada}'.")
+                    else:
+                        st.warning(f"Una o más columnas de descripción no se encontraron. Se necesitan: {desc_cols}")
+                except Exception as e:
+                    st.error(f"Error crítico al procesar las descripciones de productos: {e}")
+            else:
+                st.warning("Archivo `datos_descripciones.xlsx` no encontrado en la carpeta `data/`.")
+            # --- END REVISED ---
 
         except Exception as e:
             st.error(f"Error al calcular KPIs: {e}")
@@ -544,8 +723,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 xaxis_tickangle=45,
                 margin=dict(t=30, b=0, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                title_font_color="#000000"
+                plot_bgcolor="rgba(0,0,0,0)"
             )
             fig.update_traces(opacity=0.8)
             st.plotly_chart(fig, use_container_width=True)
@@ -565,8 +743,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 xaxis_tickangle=45,
                 margin=dict(t=30, b=0, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                title_font_color="#000000"
+                plot_bgcolor="rgba(0,0,0,0)"
             )
             fig.update_traces(opacity=0.8)
             st.plotly_chart(fig, use_container_width=True)
@@ -588,8 +765,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 xaxis_tickangle=45,
                 margin=dict(t=30, b=0, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                title_font_color="#000000"
+                plot_bgcolor="rgba(0,0,0,0)"
             )
             fig.update_traces(opacity=0.8)
             st.plotly_chart(fig, use_container_width=True)
@@ -606,8 +782,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 xaxis_tickangle=45,
                 margin=dict(t=30, b=0, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                title_font_color="#000000"
+                plot_bgcolor="rgba(0,0,0,0)"
             )
             fig.update_traces(opacity=0.8)
             st.plotly_chart(fig, use_container_width=True)
@@ -630,24 +805,29 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 xaxis_tickangle=45,
                 margin=dict(t=30, b=0, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                title_font_color="#000000"
+                plot_bgcolor="rgba(0,0,0,0)"
             )
             fig.update_traces(opacity=0.8)
             st.plotly_chart(fig, use_container_width=True)
 
         with col6:
-            # Mapa de Ventas
-            df_nacional = df_ventas[~df_ventas['Tienda'].isin(TIENDAS_EXTRANJERAS)].copy()
-            df_nacional['Ciudad'] = df_nacional['Tienda'].str.extract(r'ET\d{1,2}-([\w\s\.\(\)]+)')[0]
-            df_nacional['Ciudad'] = (
-                df_nacional['Ciudad']
+            # Mapa de Ventas - España e Italia
+            viz_title("Mapa de Ventas - España e Italia")
+            
+            # Separar datos por país
+            df_espana = df_ventas[~df_ventas['Tienda'].isin(TIENDAS_EXTRANJERAS)].copy()
+            df_italia = df_ventas[df_ventas['Tienda'].isin(TIENDAS_EXTRANJERAS)].copy()
+            
+            # Procesar datos de España
+            df_espana['Ciudad'] = df_espana['Tienda'].str.extract(r'ET\d{1,2}-([\w\s\.\(\)]+)')[0]
+            df_espana['Ciudad'] = (
+                df_espana['Ciudad']
                 .str.upper()
                 .str.replace(r'ECITRUCCO|ECI|XANADU|TRUCCO|CORT.*', '', regex=True)
                 .str.strip()
             )
 
-            coordenadas = {
+            coordenadas_espana = {
                 'MADRID': (40.4168, -3.7038),
                 'SEVILLA': (37.3886, -5.9823),
                 'MALAGA': (36.7213, -4.4214),
@@ -675,51 +855,112 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 'BADAJOZ': (38.8794, -6.9707)
             }
 
-            df_nacional['lat'] = df_nacional['Ciudad'].map(lambda c: coordenadas.get(c, (None, None))[0])
-            df_nacional['lon'] = df_nacional['Ciudad'].map(lambda c: coordenadas.get(c, (None, None))[1])
-            df_nacional = df_nacional.dropna(subset=['lat', 'lon'])
+            # Procesar datos de Italia
+            df_italia['Ciudad'] = df_italia['Tienda'].str.extract(r'I\d{3}COIN([A-Z]+)')[0]
+            df_italia['Ciudad'] = df_italia['Ciudad'].fillna('MILANO')  # Default para tiendas sin ciudad extraída
 
-            # Agrupar por ciudad y calcular el total de ventas absolutas
-            ventas_ciudad = df_nacional.groupby(['Ciudad', 'lat', 'lon']).agg({
-                'Cantidad': lambda x: abs(x).sum(),  # Usar valor absoluto para las cantidades
-                'Subtotal': 'sum'
-            }).reset_index()
+            coordenadas_italia = {
+                'BERGAMO': (45.6983, 9.6773),
+                'VARESE': (45.8206, 8.8256),
+                'BARICASAMASSIMA': (40.9634, 16.7514),
+                'MILANO5GIORNATE': (45.4642, 9.1900),
+                'ROMACINECITTA': (41.9028, 12.4964),
+                'GENOVA': (44.4056, 8.9463),
+                'SASSARI': (40.7259, 8.5557),
+                'CATANIA': (37.5079, 15.0830),
+                'CAGLIARI': (39.2238, 9.1217),
+                'LECCE': (40.3519, 18.1720),
+                'MILANOCANTORE': (45.4642, 9.1900),
+                'MESTRE': (45.4903, 12.2424),
+                'PADOVA': (45.4064, 11.8768),
+                'FIRENZE': (43.7696, 11.2558),
+                'ROMASANGIOVANNI': (41.9028, 12.4964),
+                'MILANO': (45.4642, 9.1900)
+            }
 
-            # Normalizar los tamaños de los marcadores para que sean más manejables
-            if not ventas_ciudad.empty:
-                # Asegurar que los tamaños sean positivos y estén en un rango razonable
-                min_size = 10
-                max_size = 50
-                ventas_ciudad['marker_size'] = min_size + (ventas_ciudad['Cantidad'] - ventas_ciudad['Cantidad'].min()) / \
-                    (ventas_ciudad['Cantidad'].max() - ventas_ciudad['Cantidad'].min()) * (max_size - min_size)
+            # Crear mapas separados
+            col_map1, col_map2 = st.columns(2)
+            
+            with col_map1:
+                # Mapa de España
+                df_espana['lat'] = df_espana['Ciudad'].map(lambda c: coordenadas_espana.get(c, (None, None))[0])
+                df_espana['lon'] = df_espana['Ciudad'].map(lambda c: coordenadas_espana.get(c, (None, None))[1])
+                df_espana = df_espana.dropna(subset=['lat', 'lon'])
 
-                fig = px.scatter_mapbox(
-                    ventas_ciudad,
+                ventas_ciudad_espana = df_espana.groupby(['Ciudad', 'lat', 'lon'])['Cantidad'].sum().reset_index()
+
+                if not ventas_ciudad_espana.empty:
+                    # Normalizar tamaños para España
+                    min_size = 10
+                    max_size = 50
+                    ventas_ciudad_espana['marker_size'] = min_size + (ventas_ciudad_espana['Cantidad'] - ventas_ciudad_espana['Cantidad'].min()) / \
+                        (ventas_ciudad_espana['Cantidad'].max() - ventas_ciudad_espana['Cantidad'].min()) * (max_size - min_size)
+
+                    fig_espana = px.scatter_mapbox(
+                        ventas_ciudad_espana,
                     lat='lat',
                     lon='lon',
-                    size='marker_size',  # Usar el tamaño normalizado
+                        size='marker_size',
                     color='Cantidad',
                     hover_name='Ciudad',
-                    hover_data={
-                        'marker_size': False,  # Ocultar en el hover
-                        'Cantidad': True,
-                        'Subtotal': ':,.2f€'
-                    },
-                    color_continuous_scale=COLOR_GRADIENT,
-                    zoom=5,
-                    height=400
-                )
-                fig.update_layout(
-                    title="Mapa de Ventas",
-                    mapbox_style='carto-positron',
-                    margin=dict(t=30, b=0, l=0, r=0),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No hay datos disponibles para mostrar en el mapa.")
+                        hover_data={
+                            'marker_size': False,
+                            'Cantidad': True
+                        },
+                        color_continuous_scale=COLOR_GRADIENT,
+                        zoom=5,
+                        height=300,
+                        title="España"
+                    )
+                    fig_espana.update_layout(
+                        mapbox_style='carto-positron',
+                        margin=dict(t=30, b=0, l=0, r=0),
+                        paper_bgcolor="rgba(0,0,0,0)"
+                    )
+                    st.plotly_chart(fig_espana, use_container_width=True)
+                else:
+                    st.info("No hay datos disponibles para España.")
 
+            with col_map2:
+                # Mapa de Italia
+                df_italia['lat'] = df_italia['Ciudad'].map(lambda c: coordenadas_italia.get(c, (None, None))[0])
+                df_italia['lon'] = df_italia['Ciudad'].map(lambda c: coordenadas_italia.get(c, (None, None))[1])
+                df_italia = df_italia.dropna(subset=['lat', 'lon'])
+
+                ventas_ciudad_italia = df_italia.groupby(['Ciudad', 'lat', 'lon'])['Cantidad'].sum().reset_index()
+
+                if not ventas_ciudad_italia.empty:
+                    # Normalizar tamaños para Italia
+                    min_size = 10
+                    max_size = 50
+                    ventas_ciudad_italia['marker_size'] = min_size + (ventas_ciudad_italia['Cantidad'] - ventas_ciudad_italia['Cantidad'].min()) / \
+                        (ventas_ciudad_italia['Cantidad'].max() - ventas_ciudad_italia['Cantidad'].min()) * (max_size - min_size)
+
+                    fig_italia = px.scatter_mapbox(
+                        ventas_ciudad_italia,
+                        lat='lat',
+                        lon='lon',
+                        size='marker_size',
+                        color='Cantidad',
+                        hover_name='Ciudad',
+                        hover_data={
+                            'marker_size': False,
+                            'Cantidad': True
+                        },
+                        color_continuous_scale=COLOR_GRADIENT,
+                        zoom=5,
+                        height=300,
+                        title="Italia"
+                    )
+                    fig_italia.update_layout(
+                        mapbox_style='carto-positron',
+                        margin=dict(t=30, b=0, l=0, r=0),
+                        paper_bgcolor="rgba(0,0,0,0)"
+                    )
+                    st.plotly_chart(fig_italia, use_container_width=True)
+                else:
+                    st.info("No hay datos disponibles para Italia.")
+    
     elif seccion == "Stock y Traspasos":
         # Preparación de datos
         df_traspasos['Fecha Documento'] = pd.to_datetime(df_traspasos['Fecha Documento'], errors='coerce')
@@ -744,8 +985,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 xaxis_tickangle=45,
                 margin=dict(t=30, b=0, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                title_font_color="#000000"
+                plot_bgcolor="rgba(0,0,0,0)"
             )
             fig.update_traces(opacity=0.8)
             st.plotly_chart(fig, use_container_width=True)
@@ -765,8 +1005,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 xaxis_tickangle=45,
                 margin=dict(t=30, b=0, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                title_font_color="#000000"
+                plot_bgcolor="rgba(0,0,0,0)"
             )
             fig.update_traces(opacity=0.8)
             st.plotly_chart(fig, use_container_width=True)
@@ -788,8 +1027,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 xaxis_tickangle=45,
                 margin=dict(t=30, b=0, l=0, r=0),
                 paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                title_font_color="#000000"
+                plot_bgcolor="rgba(0,0,0,0)"
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -809,8 +1047,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=30, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
@@ -837,8 +1074,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=30, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
@@ -861,8 +1097,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=30, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
@@ -899,8 +1134,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=30, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
@@ -923,8 +1157,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=30, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
@@ -954,15 +1187,14 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=30, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(
                     texttemplate='%{text:,.0f}€',
                     opacity=0.8
                 )
                 st.plotly_chart(fig, use_container_width=True)
-            else:
+                else:
                 st.info("No hay datos suficientes para calcular la rentabilidad.")
 
         with col4:
@@ -982,8 +1214,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=30, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
@@ -1008,8 +1239,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=30, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
@@ -1028,10 +1258,10 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 )
                 
                 ventas_desc = df_ventas.groupby('Rango Descuento').agg({
-                    'Cantidad': 'sum',
+            'Cantidad': 'sum',
                     'Subtotal': 'sum'
-                }).reset_index()
-                
+        }).reset_index()
+
                 fig = px.bar(ventas_desc,
                             x='Rango Descuento',
                             y='Cantidad',
@@ -1044,12 +1274,11 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     xaxis_tickangle=45,
                     margin=dict(t=30, b=0, l=0, r=0),
                     paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    title_font_color="#000000"
+                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
-            else:
+                else:
                 st.info("No hay datos suficientes para calcular los descuentos.")
 
 
