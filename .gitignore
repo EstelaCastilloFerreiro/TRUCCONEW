@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -21,26 +20,40 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.venv
+env/
 venv/
 ENV/
+env.bak/
+venv.bak/
 
 # IDE
-.idea/
 .vscode/
+.idea/
 *.swp
 *.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # Streamlit
 .streamlit/
 
-# Excel temp files
-~$*.xlsx
+# Data files (if you don't want to include them)
+# *.xlsx
+# *.csv
 
-# Archivos de Python/Streamlit que no queremos subir
-*.db
-*.sqlite3
-*.log
-
-# Archivos ocultos de editores
-.DS_Store
+# Models (if they're large)
+# models/*.pkl
+# models/*.joblib 
