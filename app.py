@@ -83,6 +83,7 @@ def set_background(image_file):
 # Login de seguridad
 if 'logueado' not in st.session_state:
     try:
+        st.image(get_asset_path("fondo.png"), use_column_width=True)
         # set_background(get_asset_path("fondo.png"))  # Aplica fondo solo antes del login
         with open(get_asset_path("Logo.png"), "rb") as f:
             st.image(f.read(), width=180)
