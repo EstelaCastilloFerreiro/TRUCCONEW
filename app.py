@@ -4,6 +4,12 @@ st.set_page_config(page_title="TRUCCO", page_icon="🡕", layout="wide")
 from dashboard import mostrar_dashboard
 import pandas as pd
 import base64
+import os
+
+# Function to get absolute path for assets
+def get_asset_path(filename):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(current_dir, "assets", filename)
 
 # Estilos CSS
 st.markdown("""
@@ -42,60 +48,70 @@ st.markdown("""
 # Función para aplicar fondo
 def set_background(image_file):
     """Establece una imagen de fondo para la app y aplica estilos de login."""
-    with open(image_file, "rb") as f:
-        img_data = f.read()
-    b64_encoded = base64.b64encode(img_data).decode()
-    style = f"""
-        <style>
-        .stApp {{
-            background-image: url(data:image/png;base64,{b64_encoded});
-            background-size: cover;
-        }}
-        .login-container {{
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-        }}
-        .login-title {{
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 20px;
-        }}
-        /* Poner etiquetas de input en blanco */
-        div[data-testid="stTextInput"] label {{
-            color: white;
-        }}
-        </style>
-    """
-    st.markdown(style, unsafe_allow_html=True)
+    try:
+        with open(image_file, "rb") as f:
+            img_data = f.read()
+            b64_encoded = base64.b64encode(img_data).decode()
+            style = f"""
+                <style>
+                .stApp {{
+                    background-image: url(data:image/png;base64,{b64_encoded});
+                    background-size: cover;
+                }}
+                .login-container {{
+                    background-color: rgba(255, 255, 255, 0.8);
+                    padding: 30px;
+                    border-radius: 10px;
+                    text-align: center;
+                }}
+                .login-title {{
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: white;
+                    margin-bottom: 20px;
+                }}
+                /* Poner etiquetas de input en blanco */
+                div[data-testid="stTextInput"] label {{
+                    color: white;
+                }}
+                </style>
+            """
+            st.markdown(style, unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Error loading background image: {e}")
 
 # Login de seguridad
 if 'logueado' not in st.session_state:
-    set_background("assets/bg_trucco.png")  # Aplica fondo solo antes del login
-    st.image("assets/Trucco.png", width=180)
-    st.markdown("<div class='login-title'>Acceso a TRUCCO Analytics</div>", unsafe_allow_html=True)
-    usuario = st.text_input("Usuario")
-    password = st.text_input("Contraseña", type="password")
-    if st.button("Entrar"):
-        if usuario and password:
-            st.session_state['logueado'] = True
-        else:
-            st.warning("Por favor, introduce usuario y contraseña")
+    try:
+        set_background(get_asset_path("bg_trucco.png"))  # Aplica fondo solo antes del login
+        with open(get_asset_path("Trucco.png"), "rb") as f:
+            st.image(f.read(), width=180)
+        st.markdown("<div class='login-title'>Acceso a TRUCCO Analytics</div>", unsafe_allow_html=True)
+        usuario = st.text_input("Usuario")
+        password = st.text_input("Contraseña", type="password")
+        if st.button("Entrar"):
+            if usuario and password:
+                st.session_state['logueado'] = True
+            else:
+                st.warning("Por favor, introduce usuario y contraseña")
+    except Exception as e:
+        st.error(f"Error loading login assets: {e}")
 
 else:
     # Ya logueado
-    st.markdown("""
-        <div class="header-container">
-            <div class="logo-container">
-                <img src="data:image/png;base64,{}" width="100">
-            </div>
-            <h1 class="main-title">Plataforma de Análisis y Predicción</h1>
-        </div>
-    """.format(
-        base64.b64encode(open("assets/Trucco.png", "rb").read()).decode()
-    ), unsafe_allow_html=True)
+    try:
+        with open(get_asset_path("Trucco.png"), "rb") as f:
+            logo_data = base64.b64encode(f.read()).decode()
+            st.markdown(f"""
+                <div class="header-container">
+                    <div class="logo-container">
+                        <img src="data:image/png;base64,{logo_data}" width="100">
+                    </div>
+                    <h1 class="main-title">Plataforma de Análisis y Predicción</h1>
+                </div>
+            """, unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Error loading header logo: {e}")
 
     st.sidebar.title("Menú de Navegación")
     opcion = st.sidebar.radio("Selecciona una vista", ["Análisis", "Predicción"])
