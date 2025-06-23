@@ -83,11 +83,12 @@ def set_background(image_file):
 # Login de seguridad
 if 'logueado' not in st.session_state:
     try:
-        st.markdown('<div style="margin-bottom: -20px"></div>', unsafe_allow_html=True)
-        st.image(get_asset_path("fondo.png"), use_container_width=True, output_format="PNG", caption=None)
-        st.markdown('<div style="margin-bottom: -10px"></div>', unsafe_allow_html=True)
-        with open(get_asset_path("Logo.png"), "rb") as f:
-            st.image(f.read(), width=180)
+        st.markdown(f'''
+            <div style="display: flex; align-items: center; width: 100%; margin-bottom: 40px;">
+                <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('Logo.png'), 'rb').read()).decode()}" style="height: 240px; margin-right: 48px;" />
+                <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('fondo.png'), 'rb').read()).decode()}" style="height: 240px; width: 100%; object-fit: cover;" />
+            </div>
+        ''', unsafe_allow_html=True)
         st.markdown("<div class='login-title'>Acceso a TRUCCO Analytics</div>", unsafe_allow_html=True)
         usuario = st.text_input("Usuario")
         password = st.text_input("Contraseña", type="password")
