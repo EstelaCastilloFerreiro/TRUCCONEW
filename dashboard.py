@@ -392,9 +392,9 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             """.format(tiendas_fisicas, ventas_fisicas_dinero, tiendas_online, ventas_online_dinero), unsafe_allow_html=True)
 
             # Par 1: Ventas Mensuales y Top 10 Tiendas con Menos Ventas
-        col1, col2 = st.columns(2)
+            col1, col2 = st.columns(2)
 
-        with col1:
+            with col1:
                 viz_title("Ventas Mensuales por Tipo de Tienda")
                 ventas_mes_tipo = df_ventas.groupby(['Mes', 'Es_Online']).agg({
                     'Cantidad': 'sum',
@@ -432,7 +432,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 
                 st.plotly_chart(fig, use_container_width=True)
 
-        with col2:
+            with col2:
                 # Top tiendas con menos ventas por unidades
                 viz_title("Top tiendas con menos ventas")
                 ventas_por_tienda = df_ventas.groupby('NombreTPV').agg({
@@ -503,7 +503,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             
             with col5:
                 viz_title("Unidades Vendidas por Talla")
-        familias = sorted(df_ventas['Familia'].unique())
+                familias = sorted(df_ventas['Familia'].unique())
                 familia_seleccionada = st.selectbox("Selecciona una familia:", familias)
                 
                 df_familia = df_ventas[df_ventas['Familia'] == familia_seleccionada]
@@ -567,16 +567,10 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     labels={'Ventas Dinero': 'Ventas (€)', 'Cantidad': 'Unidades'}
                 )
                 fig.update_traces(
-                    hovertemplate="Familia: %{y}<br>Ventas: %{x:,.2f}€<br>Unidades: %{customdata:,}<extra></extra>",
-                    customdata=ventas_familia['Cantidad'],
+                    texttemplate='%{text:,.0f} uds',
+                    textposition='outside',
+                    hovertemplate="Familia: %{y}<br>Ventas: %{x:,.2f}€<br>Unidades: %{text:,.0f}<extra></extra>",
                     opacity=0.8
-                )
-                fig.update_layout(
-                    showlegend=False,
-                    yaxis={'categoryorder': 'total ascending'},
-                    margin=dict(t=0, b=0, l=0, r=0),
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)"
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -1194,7 +1188,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     opacity=0.8
                 )
                 st.plotly_chart(fig, use_container_width=True)
-                else:
+            else:
                 st.info("No hay datos suficientes para calcular la rentabilidad.")
 
         with col4:
@@ -1278,7 +1272,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
-                else:
+            else:
                 st.info("No hay datos suficientes para calcular los descuentos.")
 
 

@@ -18,11 +18,11 @@ st.markdown("""
         margin-right: 30px;
     }
     .main-title {
-        font-size: 120px;
+        font-size: 48px;
         color: #666666;
         font-weight: 600;
         line-height: 1;
-        letter-spacing: -2px;
+        letter-spacing: -1px;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         margin: 0;
         padding: 0;
