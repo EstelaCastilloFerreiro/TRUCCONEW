@@ -89,7 +89,7 @@ if 'logueado' not in st.session_state:
                 <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('fondo.png'), 'rb').read()).decode()}" style="height: 240px; width: 100%; object-fit: cover;" />
             </div>
         ''', unsafe_allow_html=True)
-        st.markdown("<h1 style='text-align: center; color: #666666; margin-bottom: 20px;'>TRUCCO Analytics</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #666666; margin-bottom: 20px;'>Trucco Analytics</h1>", unsafe_allow_html=True)
         st.markdown("<div class='login-title'>Acceso a TRUCCO Analytics</div>", unsafe_allow_html=True)
         usuario = st.text_input("Usuario")
         password = st.text_input("Contraseña", type="password")
