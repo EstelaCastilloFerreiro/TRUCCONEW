@@ -85,7 +85,7 @@ if 'logueado' not in st.session_state:
     try:
         st.markdown(f'''
             <div style="display: flex; align-items: center; width: 100%; margin-bottom: 40px;">
-                <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('Logo.png'), 'rb').read()).decode()}" style="height: 240px; margin-right: 48px;" />
+                <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('Logo.png'), 'rb').read()).decode()}" style="height: 160px; margin-right: 48px;" />
                 <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('fondo.png'), 'rb').read()).decode()}" style="height: 240px; width: 100%; object-fit: cover;" />
             </div>
         ''', unsafe_allow_html=True)
