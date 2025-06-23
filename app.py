@@ -83,8 +83,9 @@ def set_background(image_file):
 # Login de seguridad
 if 'logueado' not in st.session_state:
     try:
-        st.image(get_asset_path("fondo.png"), use_column_width=True)
-        # set_background(get_asset_path("fondo.png"))  # Aplica fondo solo antes del login
+        st.markdown('<div style="margin-bottom: -20px"></div>', unsafe_allow_html=True)
+        st.image(get_asset_path("fondo.png"), use_container_width=True, output_format="PNG", caption=None)
+        st.markdown('<div style="margin-bottom: -10px"></div>', unsafe_allow_html=True)
         with open(get_asset_path("Logo.png"), "rb") as f:
             st.image(f.read(), width=180)
         st.markdown("<div class='login-title'>Acceso a TRUCCO Analytics</div>", unsafe_allow_html=True)
