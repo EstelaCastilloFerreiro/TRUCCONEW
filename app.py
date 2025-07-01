@@ -84,13 +84,12 @@ def set_background(image_file):
 if 'logueado' not in st.session_state:
     try:
         st.markdown(f'''
-            <div style="display: flex; align-items: center; width: 100%; margin-bottom: 40px;">
-                <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('Logo.png'), 'rb').read()).decode()}" style="height: 160px; margin-right: 48px;" />
-                <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('fondo.png'), 'rb').read()).decode()}" style="height: 240px; width: 100%; object-fit: cover;" />
+            <div style="display: flex; align-items: center; width: 100%; margin-bottom: 40px; margin-top: 0; padding-top: 0;">
+                <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('Logo.png'), 'rb').read()).decode()}" style="height: 160px; margin-right: 48px; margin-top: 0; padding-top: 0;" />
+                <img src="data:image/png;base64,{base64.b64encode(open(get_asset_path('fondo.png'), 'rb').read()).decode()}" style="height: 240px; width: 100%; object-fit: cover; margin-top: 0; padding-top: 0;" />
             </div>
+            <div style='text-align: left; color: white; font-size: 22px; font-weight: 400; margin-left: 8px; margin-bottom: 16px;'>Acceso a Trucco Analytics</div>
         ''', unsafe_allow_html=True)
-        st.markdown("<h1 style='text-align: center; color: #666666; margin-bottom: 20px;'>Trucco Analytics</h1>", unsafe_allow_html=True)
-        st.markdown("<div class='login-title'>Acceso a TRUCCO Analytics</div>", unsafe_allow_html=True)
         usuario = st.text_input("Usuario")
         password = st.text_input("Contraseña", type="password")
         if st.button("Entrar"):
@@ -111,7 +110,7 @@ else:
                     <div class="logo-container">
                         <img src="data:image/png;base64,{logo_data}" width="100">
                     </div>
-                    <h1 class="main-title">Plataforma de Análisis y Predicción</h1>
+                    <h1 class="main-title" style='font-size:32px;'>Plataforma de Análisis y Predicción</h1>
                 </div>
             """, unsafe_allow_html=True)
     except Exception as e:

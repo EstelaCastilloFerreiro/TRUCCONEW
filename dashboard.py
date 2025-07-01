@@ -663,7 +663,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                                 )
                                 fig.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending', 'title': ''}, margin=dict(t=30, b=0, l=0, r=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                                 fig.update_traces(texttemplate='%{text:,.0f} uds', textposition='outside', hovertemplate="Descripción: %{y}<br>Ventas: %{x:,.2f}€<br>Unidades: %{text:,.0f}<extra></extra>", opacity=0.8)
-                                st.plotly_chart(fig, use_container_width=True)
+                                st.plotly_chart(fig, use_container_width=True, key=f"top10_{tipo_descripcion}_{familia_seleccionada}")
                         
                             with colB:
                                 viz_title(f'Bottom 10 en {tipo_descripcion}')
@@ -678,7 +678,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                                 )
                                 fig.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending', 'title': ''}, margin=dict(t=30, b=0, l=0, r=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                                 fig.update_traces(texttemplate='%{text:,.0f} uds', textposition='outside', hovertemplate="Descripción: %{y}<br>Ventas: %{x:,.2f}€<br>Unidades: %{text:,.0f}<extra></extra>", opacity=0.8)
-                                st.plotly_chart(fig, use_container_width=True)
+                                st.plotly_chart(fig, use_container_width=True, key=f"bottom10_{tipo_descripcion}_{familia_seleccionada}")
                         else:
                             st.info(f"No hay datos de '{tipo_descripcion}' para la familia '{familia_seleccionada}'.")
                     else:
