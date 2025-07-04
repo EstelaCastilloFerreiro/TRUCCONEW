@@ -201,14 +201,11 @@ def aplicar_filtros(df):
 
     df_filtrado = df[(df['Fecha Documento'] >= pd.to_datetime(fecha_inicio)) &
                      (df['Fecha Documento'] <= pd.to_datetime(fecha_fin))]
-
     tiendas = sorted(df_filtrado['NombreTPV'].dropna().unique())
-
     modo_tienda = st.sidebar.selectbox(
         "Modo selección tiendas",
         ["Todas las tiendas", "Seleccionar tiendas específicas"]
     )
-
     if modo_tienda == "Todas las tiendas":
         tienda_seleccionada = tiendas
     else:
@@ -219,7 +216,6 @@ def aplicar_filtros(df):
         if not tienda_seleccionada:
             st.sidebar.warning("Selecciona al menos una tienda para mostrar datos.")
             return df.iloc[0:0]
-
     df_filtrado = df_filtrado[df_filtrado['NombreTPV'].isin(tienda_seleccionada)]
     return df_filtrado
 
@@ -294,6 +290,31 @@ def viz_container(title, render_function):
 
 def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
     setup_streamlit_styles()
+    # Ya no se normalizan los nombres de columnas
+    # El resto del código debe usar los nombres originales del Excel
+    # Asegurar columna 'Tienda' en ventas
+    if "Tienda" not in df_ventas.columns and "NombreTPV" in df_ventas.columns:
+        df_ventas["Tienda"] = df_ventas["NombreTPV"]
+    # Selección de columna de unidades en ventas
+    if "Cantidad" not in df_ventas.columns:
+        for col in ["Unidades", "Uds", "Qty"]:
+            if col in df_ventas.columns:
+                df_ventas["Cantidad"] = df_ventas[col]
+                break
+    # Asegurar columna 'Talla' en ventas y traspasos
+    if "Talla" not in df_ventas.columns:
+        for col in ["Talla", "Size"]:
+            if col in df_ventas.columns:
+                df_ventas["Talla"] = df_ventas[col]
+                break
+    if "Talla" not in df_traspasos.columns:
+        for col in ["Talla", "Size"]:
+            if col in df_traspasos.columns:
+                df_traspasos["Talla"] = df_traspasos[col]
+                break
+    # Depuración antes de graficar (opcional)
+    # st.write("Columnas en ventas:", df_ventas.columns)
+    # st.write("Columnas en traspasos:", df_traspasos.columns)
     
     df_ventas = df_ventas.copy()
     df_productos = df_productos.copy()
@@ -520,6 +541,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 # 4. Reindexar para asegurar el orden y la inclusión de todas las tallas (incluso con suma 0)
                 tallas_grafico = tallas_sumadas.reindex(tallas_orden, fill_value=0).reset_index()
 
+                # Mostrar gráfica de barras por talla
                 fig = px.bar(
                     tallas_grafico,
                     x='Talla',
@@ -529,7 +551,6 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     color_continuous_scale=COLOR_GRADIENT,
                     height=400
                 )
-                
                 fig.update_layout(
                     xaxis_title="Talla",
                     yaxis_title="Unidades Vendidas",
@@ -539,13 +560,15 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)"
                 )
-                
                 fig.update_traces(
                     texttemplate='%{text:,.0f}', 
                     textposition='outside',
                     opacity=0.8
                 )
                 st.plotly_chart(fig, use_container_width=True)
+
+                # Mostrar tabla de tallas (letras y números)
+                st.dataframe(tallas_grafico, use_container_width=True)
 
             with col6:
                 # Ventas por Familia: tooltip mejorado
@@ -592,10 +615,10 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                         with col_filter1:
                              # Unimos con ventas primero para solo mostrar familias relevantes
                             ventas_desc = df_ventas.copy()
-                            ventas_desc['ACT_clean'] = ventas_desc['ACT'].astype(str).str[:-1]
+                            ventas_desc['act_clean'] = ventas_desc['ACT'].astype(str).str[:-1]
                             ventas_con_desc_pre = ventas_desc.merge(
                                 df_desc[['ACT'] + desc_cols],
-                                left_on='ACT_clean',
+                                left_on='act_clean',
                                 right_on='ACT',
                                 how='inner'
                             )
@@ -626,7 +649,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                         
                         ventas_con_desc = ventas_desc.merge(
                             df_desc_clean,
-                            left_on='ACT_clean',
+                            left_on='act_clean',
                             right_on='ACT',
                             how='inner'
                         )
@@ -694,10 +717,10 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
     elif seccion == "Geográfico y Tiendas":
         # Preparar datos
         ventas_por_zona = df_ventas.groupby('Zona geográfica')['Cantidad'].sum().reset_index()
-        ventas_por_tienda = df_ventas.groupby('Tienda')['Cantidad'].sum().reset_index()
+        ventas_por_tienda = df_ventas.groupby('NombreTPV')['Cantidad'].sum().reset_index()
         ventas_por_fam_zona = df_ventas.groupby(['Zona geográfica', 'Familia'])['Cantidad'].sum().reset_index()
-        ventas_tienda_mes = df_ventas.groupby(['Mes', 'Tienda'])['Cantidad'].sum().reset_index()
-        tiendas_por_zona = df_ventas[['Tienda', 'Zona geográfica']].drop_duplicates().groupby('Zona geográfica').count().reset_index()
+        ventas_tienda_mes = df_ventas.groupby(['Mes', 'NombreTPV'])['Cantidad'].sum().reset_index()
+        tiendas_por_zona = df_ventas[['NombreTPV', 'Zona geográfica']].drop_duplicates().groupby('Zona geográfica').count().reset_index()
 
         # Primera fila de visualizaciones
         col1, col2 = st.columns(2)
@@ -725,7 +748,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             # Top 5 Tiendas
             top_5_tiendas = ventas_por_tienda.nlargest(5, 'Cantidad')
             fig = px.bar(top_5_tiendas, 
-                        x='Tienda', 
+                        x='NombreTPV', 
                         y='Cantidad',
                         color='Cantidad',
                         color_continuous_scale=COLOR_GRADIENT,
@@ -748,10 +771,10 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             # Tiendas por Zona
             fig = px.bar(tiendas_por_zona, 
                         x='Zona geográfica', 
-                        y='Tienda',
-                        color='Tienda',
+                        y='NombreTPV',
+                        color='NombreTPV',
                         color_continuous_scale=COLOR_GRADIENT,
-                        text='Tienda')
+                        text='NombreTPV')
             fig.update_layout(
                 title="Tiendas por Zona",
                 showlegend=False,
@@ -765,7 +788,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
 
         with col4:
             # Distribución Mensual de Ventas
-            pivot_tienda_mes = ventas_tienda_mes.pivot(index='Mes', columns='Tienda', values='Cantidad').fillna(0)
+            pivot_tienda_mes = ventas_tienda_mes.pivot(index='Mes', columns='NombreTPV', values='Cantidad').fillna(0)
             fig = px.line(pivot_tienda_mes, 
                          color_discrete_sequence=COLOR_GRADIENT)
             fig.update_layout(
@@ -808,11 +831,11 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             viz_title("Mapa de Ventas - España e Italia")
             
             # Separar datos por país
-            df_espana = df_ventas[~df_ventas['Tienda'].isin(TIENDAS_EXTRANJERAS)].copy()
-            df_italia = df_ventas[df_ventas['Tienda'].isin(TIENDAS_EXTRANJERAS)].copy()
+            df_espana = df_ventas[~df_ventas['NombreTPV'].isin(TIENDAS_EXTRANJERAS)].copy()
+            df_italia = df_ventas[df_ventas['NombreTPV'].isin(TIENDAS_EXTRANJERAS)].copy()
             
             # Procesar datos de España
-            df_espana['Ciudad'] = df_espana['Tienda'].str.extract(r'ET\d{1,2}-([\w\s\.\(\)]+)')[0]
+            df_espana['Ciudad'] = df_espana['NombreTPV'].str.extract(r'ET\d{1,2}-([\w\s\.\(\)]+)')[0]
             df_espana['Ciudad'] = (
                 df_espana['Ciudad']
                 .str.upper()
@@ -849,7 +872,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             }
 
             # Procesar datos de Italia
-            df_italia['Ciudad'] = df_italia['Tienda'].str.extract(r'I\d{3}COIN([A-Z]+)')[0]
+            df_italia['Ciudad'] = df_italia['NombreTPV'].str.extract(r'I\d{3}COIN([A-Z]+)')[0]
             df_italia['Ciudad'] = df_italia['Ciudad'].fillna('MILANO')  # Default para tiendas sin ciudad extraída
 
             coordenadas_italia = {
@@ -1094,6 +1117,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
+                st.dataframe(traspasos_talla, use_container_width=True)
             else:
                 st.info("No hay datos de talla disponibles para traspasos.")
 
@@ -1236,6 +1260,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                 )
                 fig.update_traces(opacity=0.8)
                 st.plotly_chart(fig, use_container_width=True)
+                st.dataframe(dev_talla, use_container_width=True)
             else:
                 st.info("No hay datos de talla disponibles para devoluciones.")
 
