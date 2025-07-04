@@ -133,6 +133,15 @@ else:
             st.sidebar.success("Archivo cargado correctamente")
 
             if opcion == "Análisis":
+                st.sidebar.header("Filtros")
+                # --- Filtro de temporada ---
+                temporadas = df_ventas["Temporada"].dropna().unique().tolist()
+                temporadas.sort()
+                temporadas_opciones = ["Todas las temporadas"] + temporadas
+                temporada_seleccionada = st.sidebar.selectbox("Temporada", temporadas_opciones)
+                if temporada_seleccionada != "Todas las temporadas":
+                    df_ventas = df_ventas[df_ventas["Temporada"] == temporada_seleccionada]
+                # --- Fin filtro de temporada ---
                 seccion = st.sidebar.selectbox("Área de Análisis", [
                     "Resumen General",
                     "Geográfico y Tiendas",

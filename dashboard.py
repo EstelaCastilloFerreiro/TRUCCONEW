@@ -440,10 +440,10 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     'Ventas Dinero': 'sum'
                 }).reset_index()
                 ventas_por_tienda.columns = ['Tienda', 'Unidades Vendidas', 'Ventas (€)']
-                bottom_10_tiendas = ventas_por_tienda.nsmallest(10, 'Unidades Vendidas')
+                bottom_30_tiendas = ventas_por_tienda.nsmallest(30, 'Unidades Vendidas')
                 
                 fig = px.bar(
-                    bottom_10_tiendas,
+                    bottom_30_tiendas,
                     x='Tienda',
                     y='Unidades Vendidas',
                     color='Unidades Vendidas',
@@ -461,7 +461,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     texttemplate='%{y:,.0f} uds',
                     textposition='outside',
                     hovertemplate="Tienda: %{x}<br>Unidades: %{y:,}<br>Ventas: %{customdata:,.2f}€<extra></extra>",
-                    customdata=bottom_10_tiendas['Ventas (€)'],
+                    customdata=bottom_30_tiendas['Ventas (€)'],
                     opacity=0.8
                 )
                 st.plotly_chart(fig, use_container_width=True)
@@ -470,9 +470,9 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             col3, col4 = st.columns(2)
             with col3:
                 viz_title("Top tiendas con más ventas")
-                top_10_tiendas = ventas_por_tienda.nlargest(10, 'Ventas (€)')
+                top_30_tiendas = ventas_por_tienda.nlargest(30, 'Ventas (€)')
                 fig = px.bar(
-                    top_10_tiendas,
+                    top_30_tiendas,
                     x='Tienda',
                     y='Ventas (€)',
                     color='Ventas (€)',
@@ -491,7 +491,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                     texttemplate='%{y:,.2f}€',
                     textposition='outside',
                     hovertemplate="Tienda: %{x}<br>Ventas: %{y:,.2f}€<br>Unidades: %{customdata:,}<extra></extra>",
-                    customdata=top_10_tiendas['Unidades Vendidas'],
+                    customdata=top_30_tiendas['Unidades Vendidas'],
                     opacity=0.8
                 )
                 st.plotly_chart(fig, use_container_width=True)
@@ -663,7 +663,6 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
                                 )
                                 fig.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending', 'title': ''}, margin=dict(t=30, b=0, l=0, r=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
                                 fig.update_traces(texttemplate='%{text:,.0f} uds', textposition='outside', hovertemplate="Descripción: %{y}<br>Ventas: %{x:,.2f}€<br>Unidades: %{text:,.0f}<extra></extra>", opacity=0.8)
-                                st.plotly_chart(fig, use_container_width=True, key=f"top10_{tipo_descripcion}_{familia_seleccionada}")
                         
                             with colB:
                                 viz_title(f'Bottom 10 en {tipo_descripcion}')
