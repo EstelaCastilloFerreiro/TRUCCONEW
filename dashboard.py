@@ -301,24 +301,60 @@ def viz_container(title, render_function):
 
 def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
     setup_streamlit_styles()
-    # Ya no se normalizan los nombres de columnas
-    # El resto del código debe usar los nombres originales del Excel
+    
+    # Preparar df_ventas con todas las columnas necesarias
+    df_ventas = df_ventas.copy()
+    
     # Asegurar columna 'Tienda' en ventas
     if "Tienda" not in df_ventas.columns and "NombreTPV" in df_ventas.columns:
         df_ventas["Tienda"] = df_ventas["NombreTPV"]
+    
     # Selección de columna de unidades en ventas
     if "Cantidad" not in df_ventas.columns:
         for col in ["Unidades", "Uds", "Qty"]:
             if col in df_ventas.columns:
                 df_ventas["Cantidad"] = df_ventas[col]
                 break
-    # Asegurar columna 'Talla' en ventas y traspasos
+    
+    # Asegurar columna 'Talla' en ventas
     if "Talla" not in df_ventas.columns:
         for col in ["Talla", "Size"]:
             if col in df_ventas.columns:
                 df_ventas["Talla"] = df_ventas[col]
                 break
     
+    # Crear columna 'Ventas Dinero' basada en Subtotal o P.V.P. * Cantidad
+    if 'Ventas Dinero' not in df_ventas.columns:
+        if 'Subtotal' in df_ventas.columns:
+            df_ventas['Ventas Dinero'] = pd.to_numeric(df_ventas['Subtotal'], errors='coerce').fillna(0)
+        elif 'P.V.P.' in df_ventas.columns and 'Cantidad' in df_ventas.columns:
+            pvp = pd.to_numeric(df_ventas['P.V.P.'], errors='coerce').fillna(0)
+            cantidad = pd.to_numeric(df_ventas['Cantidad'], errors='coerce').fillna(0)
+            df_ventas['Ventas Dinero'] = pvp * cantidad
+        else:
+            # Fallback: usar Cantidad como Ventas Dinero si no hay otras opciones
+            df_ventas['Ventas Dinero'] = pd.to_numeric(df_ventas['Cantidad'], errors='coerce').fillna(0)
+    
+    # Crear columna 'Familia' si no existe
+    if 'Familia' not in df_ventas.columns:
+        if 'Descripción Familia' in df_ventas.columns:
+            df_ventas['Familia'] = df_ventas['Descripción Familia'].fillna("Sin Familia")
+        else:
+            df_ventas['Familia'] = "Sin Familia"
+    
+    # Crear columna 'Es_Online' para identificar tiendas online
+    if 'Es_Online' not in df_ventas.columns:
+        df_ventas['Es_Online'] = df_ventas['NombreTPV'].str.contains('ONLINE', case=False, na=False)
+    
+    # Crear columna 'Mes' si no existe
+    if 'Mes' not in df_ventas.columns and 'Fecha Documento' in df_ventas.columns:
+        df_ventas['Fecha Documento'] = pd.to_datetime(df_ventas['Fecha Documento'], errors='coerce')
+        df_ventas['Mes'] = df_ventas['Fecha Documento'].dt.to_period('M').astype(str)
+    
+    # Asegurar que las columnas numéricas sean del tipo correcto
+    df_ventas['Cantidad'] = pd.to_numeric(df_ventas['Cantidad'], errors='coerce').fillna(0)
+    df_ventas['Ventas Dinero'] = pd.to_numeric(df_ventas['Ventas Dinero'], errors='coerce').fillna(0)
+
     if seccion == "Resumen General":
         try:
             # Calcular KPIs
@@ -786,8 +822,7 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             if not df_almacen_fam.empty and 'Fecha REAL entrada en almacén' in df_almacen_fam.columns:
                 # Convertir fecha de entrada en almacén
                 df_almacen_fam['Fecha REAL entrada en almacén'] = pd.to_datetime(
-                    df_almacen_fam['Fecha REAL entrada en almacén'], errors='coerce'
-                )
+                    df_almacen_fam['Fecha REAL entrada en almacén'], errors='coerce')
                 
                 # Separar filas con fecha válida y sin fecha
                 df_almacen_fam_con_fecha = df_almacen_fam.dropna(subset=['Fecha REAL entrada en almacén'])
