@@ -2551,4 +2551,57 @@ def mostrar_dashboard(df_productos, df_traspasos, df_ventas, seccion):
             else:
                 st.info("No hay datos suficientes para calcular los descuentos.")
 
+    # Robust column name handling functions
+    def find_column_by_pattern(df, pattern):
+        """
+        Find a column in DataFrame that matches a pattern, handling whitespace and encoding issues
+        """
+        if df is None or not isinstance(df, pd.DataFrame):
+            return None
+        
+        pattern_clean = pattern.strip().lower()
+        for col in df.columns:
+            col_clean = str(col).strip().lower()
+            if pattern_clean in col_clean or col_clean in pattern_clean:
+                return col
+        return None
+
+    def get_fecha_enviado_column(df_traspasos):
+        """
+        Get the 'Fecha Enviado' column from traspasos DataFrame with robust handling
+        """
+        if df_traspasos is None or not isinstance(df_traspasos, pd.DataFrame):
+            return None
+        
+        # Try multiple patterns to find the column
+        patterns = ['Fecha Enviado', 'FechaEnviado', 'Fecha_Enviado', 'fecha enviado', 'fechaenviado']
+        
+        for pattern in patterns:
+            col = find_column_by_pattern(df_traspasos, pattern)
+            if col is not None:
+                return col
+        
+        # If not found, print available columns for debugging
+        print(f"Available columns in traspasos: {df_traspasos.columns.tolist()}")
+        return None
+
+    def get_cantidad_pedida_column(df_productos):
+        """
+        Get the 'Cantidad Pedida' column from productos DataFrame with robust handling
+        """
+        if df_productos is None or not isinstance(df_productos, pd.DataFrame):
+            return None
+        
+        # Try multiple patterns to find the column
+        patterns = ['Cantidad Pedida', 'CantidadPedida', 'Cantidad_Pedida', 'cantidad pedida', 'cantidadpedida']
+        
+        for pattern in patterns:
+            col = find_column_by_pattern(df_productos, pattern)
+            if col is not None:
+                return col
+        
+        # If not found, print available columns for debugging
+        print(f"Available columns in productos: {df_productos.columns.tolist()}")
+        return None
+
 
